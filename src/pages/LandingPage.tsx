@@ -1,26 +1,43 @@
-import { useState } from "react";
-import { Card, CardContent } from "../components/ui/Card";
-import { Input } from "../components/ui/Input";
-import { Button } from "../components/ui/Button";
+//Landingpage.tsx
+
+import React, { useState } from "react";
 import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "../components/ui/Tabs";
+  Card,
+  Statistic,
+  Row,
+  Col,
+  Typography,
+  Table,
+  Tag,
+  Space,
+  Avatar,
+  Descriptions,
+  Button,
+  Dropdown,
+  Input,
+  Select,
+  Menu,
+  Progress,
+} from "antd";
 import {
-  ArrowUpRight,
-  ArrowDownRight,
-  Wallet,
-  Search,
-  Image as ImageIcon,
-  LayersIcon,
-  Clock,
-  ExternalLink,
-  Copy,
-  RefreshCcw,
-} from "lucide-react";
-import { mockData } from "../data/data";
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+  LinkOutlined,
+  CopyOutlined,
+  FilterOutlined,
+  SortAscendingOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
+import { Token, NFT, StakedAsset, Transaction } from "../data/data";
+
+const { Title, Text } = Typography;
+const { Search } = Input;
+
+interface PortfolioContentProps {
+  activeTab: string;
+  data: any;
+  theme: any;
+}
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -30,420 +47,471 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-const formatNumber = (value: number, decimals = 2) => {
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(value);
-};
+const PortfolioContent: React.FC<PortfolioContentProps> = ({
+  activeTab,
+  data,
+  theme,
+}) => {
+  const [searchText, setSearchText] = useState("");
+  const [sortedInfo, setSortedInfo] = useState<any>({});
+  const [filteredInfo, setFilteredInfo] = useState<any>({});
 
-const formatAddress = (address: string) => {
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-};
-
-const copyToClipboard = (text: string) => {
-  navigator.clipboard.writeText(text);
-};
-
-const App = () => {
-  const [address, setAddress] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSearch = () => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+  const handleChange = (pagination: any, filters: any, sorter: any) => {
+    setSortedInfo(sorter);
+    setFilteredInfo(filters);
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-        {/* Header */}
-        <div className="mb-8 space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <h1 className="text-3xl font-bold text-blue-900">Supra Bank</h1>
-            <div className="flex w-full sm:w-auto gap-2">
-              <Input
-                className="max-w-md"
-                placeholder="Enter wallet address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-              <Button
-                onClick={handleSearch}
-                disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {isLoading ? (
-                  <RefreshCcw className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Search className="w-4 h-4 mr-2" />
-                )}
-                Search
-              </Button>
-            </div>
-          </div>
+  const clearAll = () => {
+    setSortedInfo({});
+    setFilteredInfo({});
+    setSearchText("");
+  };
 
-          {/* Portfolio Value Card */}
-          <Card className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-            <CardContent className="py-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                  <div className="text-blue-100 mb-2">
-                    Total Portfolio Value
-                  </div>
-                  <div className="text-4xl font-bold">
-                    {formatCurrency(mockData.totalBalance)}
-                  </div>
-                </div>
-                <div
-                  className={`flex items-center ${
-                    mockData.totalBalanceChange24h >= 0
-                      ? "text-green-400"
-                      : "text-red-400"
-                  }`}
-                >
-                  {mockData.totalBalanceChange24h >= 0 ? (
-                    <ArrowUpRight size={20} />
-                  ) : (
-                    <ArrowDownRight size={20} />
-                  )}
-                  <span className="ml-1 text-lg">
-                    {Math.abs(mockData.totalBalanceChange24h)}%
-                  </span>
-                  <span className="ml-2 text-sm text-blue-100">24h change</span>
-                </div>
+  const renderPortfolioOverview = () => {
+    const tokenColumns = [
+      {
+        title: "Asset",
+        key: "asset",
+        fixed: "left",
+        render: (token: Token) => (
+          <Space>
+            <Avatar src={token.icon} size="small" />
+            <div>
+              <Text strong>{token.symbol}</Text>
+              <div>
+                <Text type="secondary">{token.name}</Text>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <Tabs defaultValue="portfolio" className="space-y-6">
-          <TabsList className="w-full justify-start bg-white border-b border-gray-200 p-0">
-            <TabsTrigger
-              value="portfolio"
-              className="px-6 py-4 data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
-            >
-              <Wallet className="w-4 h-4 mr-2" />
-              Portfolio
-            </TabsTrigger>
-            <TabsTrigger
-              value="nfts"
-              className="px-6 py-4 data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
-            >
-              <ImageIcon className="w-4 h-4 mr-2" />
-              NFTs
-            </TabsTrigger>
-            <TabsTrigger
-              value="staking"
-              className="px-6 py-4 data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
-            >
-              <LayersIcon className="w-4 h-4 mr-2" />
-              Staking
-            </TabsTrigger>
-            <TabsTrigger
-              value="transactions"
-              className="px-6 py-4 data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
-            >
-              <Clock className="w-4 h-4 mr-2" />
-              Transactions
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Portfolio Tab Content */}
-          <TabsContent value="portfolio">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockData.tokens.map((token) => (
-                <Card
-                  key={token.symbol}
-                  className="hover:shadow-lg transition-shadow"
-                >
-                  <CardContent className="py-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center">
-                        <img
-                          src={token.icon}
-                          alt={token.name}
-                          className="w-10 h-10 rounded-full mr-3"
-                        />
-                        <div>
-                          <div className="font-semibold text-lg">
-                            {token.symbol}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {token.name}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div
-                          className={`flex items-center ${
-                            token.change24h >= 0
-                              ? "text-green-500"
-                              : "text-red-500"
-                          }`}
-                        >
-                          {token.change24h >= 0 ? (
-                            <ArrowUpRight size={16} />
-                          ) : (
-                            <ArrowDownRight size={16} />
-                          )}
-                          <span className="ml-1">
-                            {Math.abs(token.change24h)}%
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-500">24h</div>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Balance</span>
-                        <span className="font-medium">
-                          {formatNumber(token.balance)} {token.symbol}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Value</span>
-                        <span className="font-medium">
-                          {formatCurrency(token.balance * token.price)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Price</span>
-                        <span className="font-medium">
-                          {formatCurrency(token.price)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">24h Volume</span>
-                        <span className="font-medium">
-                          {formatCurrency(token.volume24h)}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
             </div>
-          </TabsContent>
-
-          {/* NFTs Tab Content */}
-          <TabsContent value="nfts">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockData.nfts.map((nft) => (
-                <Card
-                  key={nft.id}
-                  className="hover:shadow-lg transition-shadow"
-                >
-                  <CardContent className="py-6">
-                    <img
-                      src={nft.image}
-                      alt={nft.name}
-                      className="w-full h-48 object-cover rounded-lg mb-4"
-                    />
-                    <div className="space-y-4">
-                      <div>
-                        <div className="font-semibold text-lg">{nft.name}</div>
-                        <div className="text-sm text-gray-500">
-                          {nft.collection}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-sm text-gray-500">
-                            Floor Price
-                          </div>
-                          <div className="font-medium">
-                            {formatCurrency(nft.floorPrice)}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-gray-500">
-                            Last Price
-                          </div>
-                          <div className="font-medium">
-                            {formatCurrency(nft.lastPrice)}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-gray-500">Rarity</div>
-                          <div className="font-medium">{nft.rarity}%</div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-gray-500">Rank</div>
-                          <div className="font-medium">#{nft.rank}</div>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {nft.traits.map((trait, index) => (
-                          <div
-                            key={index}
-                            className="bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-sm"
-                          >
-                            {trait.type}: {trait.value}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          </Space>
+        ),
+        filterable: true,
+        sorter: (a: Token, b: Token) => a.symbol.localeCompare(b.symbol),
+      },
+      {
+        title: "Balance",
+        dataIndex: "balance",
+        key: "balance",
+        render: (balance: number, token: Token) => (
+          <div>
+            <div>
+              {balance.toFixed(4)} {token.symbol}
             </div>
-          </TabsContent>
+            <Text type="secondary">
+              {formatCurrency(balance * token.price)}
+            </Text>
+          </div>
+        ),
+        sorter: (a: Token, b: Token) => a.balance - b.balance,
+      },
+      {
+        title: "Price",
+        dataIndex: "price",
+        key: "price",
+        render: (price: number) => <Text strong>{formatCurrency(price)}</Text>,
+        sorter: (a: Token, b: Token) => a.price - b.price,
+      },
+      {
+        title: "24h Change",
+        dataIndex: "change24h",
+        key: "change24h",
+        render: (change: number) => (
+          <Text type={change >= 0 ? "success" : "danger"} strong>
+            {change >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+            {Math.abs(change)}%
+          </Text>
+        ),
+        sorter: (a: Token, b: Token) => a.change24h - b.change24h,
+        filters: [
+          { text: "Positive", value: "positive" },
+          { text: "Negative", value: "negative" },
+        ],
+        onFilter: (value: string, record: Token) =>
+          value === "positive" ? record.change24h >= 0 : record.change24h < 0,
+      },
+      {
+        title: "Volume (24h)",
+        dataIndex: "volume24h",
+        key: "volume24h",
+        render: (volume: number) => formatCurrency(volume),
+        sorter: (a: Token, b: Token) => a.volume24h - b.volume24h,
+      },
+    ];
 
-          {/* Staking Tab Content */}
-          <TabsContent value="staking">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockData.stakedAssets.map((asset, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="py-6">
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="font-semibold text-lg">
-                            {asset.protocol}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {asset.rewardToken} Rewards
-                          </div>
-                        </div>
-                        <div className="text-green-500 font-semibold">
-                          {asset.apy}% APY
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Staked Amount</span>
-                          <span className="font-medium">
-                            {formatCurrency(asset.amount)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Rewards Earned</span>
-                          <span className="font-medium">
-                            {formatCurrency(asset.rewards)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Lock Period</span>
-                          <span className="font-medium">
-                            {asset.lockPeriod} days
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Unlock Date</span>
-                          <span className="font-medium">
-                            {new Date(asset.unlockDate).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+    return (
+      <div className="space-y-6">
+        <Space style={{ marginBottom: 16 }}>
+          <Search
+            placeholder="Search assets"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200 }}
+          />
+          <Button onClick={clearAll} icon={<ReloadOutlined />}>
+            Reset
+          </Button>
+        </Space>
 
-          {/* Transactions Tab Content */}
-          <TabsContent value="transactions">
-            <Card>
-              <CardContent className="p-0">
-                <div className="divide-y divide-gray-200">
-                  {mockData.transactions.map((tx) => (
-                    <div
-                      key={tx.id}
-                      className="p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center space-x-4">
-                          <div
-                            className={`p-2 rounded-full ${
-                              tx.type === "send"
-                                ? "bg-red-100 text-red-600"
-                                : tx.type === "receive"
-                                ? "bg-green-100 text-green-600"
-                                : "bg-blue-100 text-blue-600"
-                            }`}
-                          >
-                            {tx.type === "send" ? (
-                              <ArrowUpRight />
-                            ) : tx.type === "receive" ? (
-                              <ArrowDownRight />
-                            ) : (
-                              <RefreshCcw />
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-medium">
-                              {tx.type.charAt(0).toUpperCase() +
-                                tx.type.slice(1)}{" "}
-                              {tx.token}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {new Date(tx.timestamp).toLocaleString()}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <div
-                              className={`font-medium ${
-                                tx.type === "send"
-                                  ? "text-red-600"
-                                  : "text-green-600"
-                              }`}
-                            >
-                              {tx.type === "send" ? "-" : "+"}
-                              {formatNumber(tx.amount)} {tx.token}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              Fee: {formatNumber(tx.fee)} ETH
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                window.open(
-                                  `https://etherscan.io/tx/${tx.hash}`,
-                                  "_blank"
-                                )
-                              }
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => copyToClipboard(tx.hash)}
-                            >
-                              <Copy className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-sm text-gray-500">
-                        <div className="flex flex-wrap gap-x-4">
-                          <span>From: {formatAddress(tx.from)}</span>
-                          <span>To: {formatAddress(tx.to)}</span>
-                          <span>Block: {tx.block}</span>
-                          <span>Method: {tx.method}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <Table
+          columns={tokenColumns}
+          dataSource={data.tokens.filter(
+            (token: Token) =>
+              token.name.toLowerCase().includes(searchText.toLowerCase()) ||
+              token.symbol.toLowerCase().includes(searchText.toLowerCase())
+          )}
+          rowKey="symbol"
+          onChange={handleChange}
+          pagination={false}
+          scroll={{ x: 1000 }}
+          style={{
+            background: "white",
+            borderRadius: theme.borderRadius,
+            boxShadow: theme.boxShadow,
+          }}
+        />
       </div>
-    </div>
-  );
+    );
+  };
+
+  const renderNFTs = () => {
+    return (
+      <>
+        <Space style={{ marginBottom: 16 }}>
+          <Search
+            placeholder="Search NFTs"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200 }}
+          />
+          <Select
+            placeholder="Filter by Collection"
+            style={{ width: 200 }}
+            allowClear
+            options={[
+              ...new Set(data.nfts.map((nft: NFT) => nft.collection)),
+            ].map((collection) => ({
+              label: collection,
+              value: collection,
+            }))}
+          />
+          <Button onClick={clearAll} icon={<ReloadOutlined />}>
+            Reset
+          </Button>
+        </Space>
+
+        <Row gutter={[24, 24]}>
+          {data.nfts
+            .filter(
+              (nft: NFT) =>
+                nft.name.toLowerCase().includes(searchText.toLowerCase()) ||
+                nft.collection.toLowerCase().includes(searchText.toLowerCase())
+            )
+            .map((nft: NFT) => (
+              <Col key={nft.id} xs={24} sm={12} lg={8}>
+                <Card
+                  hoverable
+                  cover={
+                    <div style={{ position: "relative" }}>
+                      <img
+                        alt={nft.name}
+                        src={nft.image}
+                        style={{
+                          height: 200,
+                          objectFit: "cover",
+                          borderTopLeftRadius: theme.borderRadius,
+                          borderTopRightRadius: theme.borderRadius,
+                        }}
+                      />
+                      <Tag
+                        color="blue"
+                        style={{
+                          position: "absolute",
+                          top: 10,
+                          right: 10,
+                          padding: "4px 8px",
+                        }}
+                      >
+                        Rank #{nft.rank}
+                      </Tag>
+                    </div>
+                  }
+                  style={{
+                    borderRadius: theme.borderRadius,
+                    boxShadow: theme.boxShadow,
+                  }}
+                >
+                  <Card.Meta title={nft.name} description={nft.collection} />
+                  <div style={{ marginTop: 16 }}>
+                    <Progress
+                      percent={nft.rarity}
+                      status="active"
+                      strokeColor={{
+                        "0%": theme.colorPrimary,
+                        "100%": theme.colorSecondary,
+                      }}
+                    />
+                  </div>
+                  <Descriptions column={2} className="mt-4">
+                    <Descriptions.Item label="Floor Price">
+                      <Text strong>{formatCurrency(nft.floorPrice)}</Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Last Price">
+                      <Text strong>{formatCurrency(nft.lastPrice)}</Text>
+                    </Descriptions.Item>
+                  </Descriptions>
+                  <div className="mt-4">
+                    {nft.traits.map((trait, index) => (
+                      <Tag
+                        key={index}
+                        color="processing"
+                        style={{ margin: "4px" }}
+                      >
+                        {trait.type}: {trait.value}
+                      </Tag>
+                    ))}
+                  </div>
+                </Card>
+              </Col>
+            ))}
+        </Row>
+      </>
+    );
+  };
+
+  {
+    /* Continuing from previous code... */
+  }
+
+  const renderStaking = () => {
+    const stakingColumns = [
+      {
+        title: "Protocol",
+        dataIndex: "protocol",
+        key: "protocol",
+        sorter: (a: StakedAsset, b: StakedAsset) =>
+          a.protocol.localeCompare(b.protocol),
+      },
+      {
+        title: "Staked Amount",
+        dataIndex: "amount",
+        key: "amount",
+        render: (amount: number) => (
+          <Text strong>{formatCurrency(amount)}</Text>
+        ),
+        sorter: (a: StakedAsset, b: StakedAsset) => a.amount - b.amount,
+      },
+      {
+        title: "APY",
+        dataIndex: "apy",
+        key: "apy",
+        render: (apy: number) => (
+          <Tag color="success" style={{ padding: "4px 8px" }}>
+            {apy}% APY
+          </Tag>
+        ),
+        sorter: (a: StakedAsset, b: StakedAsset) => a.apy - b.apy,
+        filters: [
+          { text: "High APY (>20%)", value: "high" },
+          { text: "Medium APY (10-20%)", value: "medium" },
+          { text: "Low APY (<10%)", value: "low" },
+        ],
+        onFilter: (value: string, record: StakedAsset) => {
+          switch (value) {
+            case "high":
+              return record.apy > 20;
+            case "medium":
+              return record.apy >= 10 && record.apy <= 20;
+            case "low":
+              return record.apy < 10;
+            default:
+              return true;
+          }
+        },
+      },
+      {
+        title: "Rewards",
+        dataIndex: "rewards",
+        key: "rewards",
+        render: (rewards: number) => formatCurrency(rewards),
+        sorter: (a: StakedAsset, b: StakedAsset) => a.rewards - b.rewards,
+      },
+      {
+        title: "Lock Period",
+        dataIndex: "lockPeriod",
+        key: "lockPeriod",
+        render: (period: number) => `${period} days`,
+        sorter: (a: StakedAsset, b: StakedAsset) => a.lockPeriod - b.lockPeriod,
+      },
+      {
+        title: "Unlock Date",
+        dataIndex: "unlockDate",
+        key: "unlockDate",
+        render: (date: Date) => new Date(date).toLocaleDateString(),
+        sorter: (a: StakedAsset, b: StakedAsset) =>
+          new Date(a.unlockDate).getTime() - new Date(b.unlockDate).getTime(),
+      },
+    ];
+
+    return (
+      <div>
+        <Space style={{ marginBottom: 16 }}>
+          <Search
+            placeholder="Search protocols"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200 }}
+          />
+          <Button onClick={clearAll} icon={<ReloadOutlined />}>
+            Reset Filters
+          </Button>
+        </Space>
+        <Table
+          columns={stakingColumns}
+          dataSource={data.stakedAssets}
+          onChange={handleChange}
+          rowKey="protocol"
+          style={{
+            background: "white",
+            borderRadius: theme.borderRadius,
+            boxShadow: theme.boxShadow,
+          }}
+        />
+      </div>
+    );
+  };
+
+  const renderTransactions = () => {
+    const transactionColumns = [
+      {
+        title: "Type",
+        dataIndex: "type",
+        key: "type",
+        render: (type: string) => (
+          <Tag color={type === "send" ? "error" : "success"}>
+            {type.toUpperCase()}
+          </Tag>
+        ),
+        filters: [
+          { text: "Send", value: "send" },
+          { text: "Receive", value: "receive" },
+          { text: "Swap", value: "swap" },
+        ],
+        onFilter: (value: string, record: Transaction) => record.type === value,
+      },
+      {
+        title: "Amount",
+        dataIndex: "amount",
+        key: "amount",
+        render: (amount: number, record: Transaction) => (
+          <Text
+            strong
+            className={
+              record.type === "send" ? "text-red-500" : "text-green-500"
+            }
+          >
+            {record.type === "send" ? "-" : "+"}
+            {amount} {record.token}
+          </Text>
+        ),
+        sorter: (a: Transaction, b: Transaction) => a.amount - b.amount,
+      },
+      {
+        title: "Value",
+        dataIndex: "amount",
+        key: "value",
+        render: (amount: number) => formatCurrency(amount * 2), // Mock price calculation
+        sorter: (a: Transaction, b: Transaction) => a.amount - b.amount,
+      },
+      {
+        title: "Date",
+        dataIndex: "timestamp",
+        key: "timestamp",
+        render: (date: Date) => new Date(date).toLocaleString(),
+        sorter: (a: Transaction, b: Transaction) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+      },
+      {
+        title: "Status",
+        dataIndex: "status",
+        key: "status",
+        render: (status: string) => (
+          <Tag
+            color={
+              status === "completed"
+                ? "success"
+                : status === "pending"
+                ? "processing"
+                : "error"
+            }
+          >
+            {status.toUpperCase()}
+          </Tag>
+        ),
+        filters: [
+          { text: "Completed", value: "completed" },
+          { text: "Pending", value: "pending" },
+          { text: "Failed", value: "failed" },
+        ],
+        onFilter: (value: string, record: Transaction) =>
+          record.status === value,
+      },
+      {
+        title: "Actions",
+        key: "actions",
+        render: (record: Transaction) => (
+          <Space>
+            <Button
+              type="link"
+              icon={<LinkOutlined />}
+              onClick={() =>
+                window.open(`https://etherscan.io/tx/${record.hash}`, "_blank")
+              }
+            />
+            <Button
+              type="link"
+              icon={<CopyOutlined />}
+              onClick={() => navigator.clipboard.writeText(record.hash)}
+            />
+          </Space>
+        ),
+      },
+    ];
+
+    return (
+      <div>
+        <Space style={{ marginBottom: 16 }}>
+          <Search
+            placeholder="Search transactions"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200 }}
+          />
+          <Button onClick={clearAll} icon={<ReloadOutlined />}>
+            Reset Filters
+          </Button>
+        </Space>
+        <Table
+          columns={transactionColumns}
+          dataSource={data.transactions}
+          onChange={handleChange}
+          rowKey="id"
+          style={{
+            background: "white",
+            borderRadius: theme.borderRadius,
+            boxShadow: theme.boxShadow,
+          }}
+        />
+      </div>
+    );
+  };
+
+  const contentMap = {
+    portfolio: renderPortfolioOverview,
+    nfts: renderNFTs,
+    staking: renderStaking,
+    transactions: renderTransactions,
+  };
+
+  return contentMap[activeTab as keyof typeof contentMap]();
 };
 
-export default App;
+export default PortfolioContent;
